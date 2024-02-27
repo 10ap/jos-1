@@ -14,6 +14,16 @@
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
+//ANSI color codes
+#define ANSI_RESET "\x1b[0m"
+#define ANSI_ORANGE "\x1b[38;5;214m"
+#define ANSI_LIGHT_GREEN "\x1b[38;5;118m"
+#define ANSI_PINK "\x1b[38;5;207m"
+#define ANSI_LIGHT_BLUE "\x1b[38;5;117m"
+#define ANSI_PEACH "\x1b[38;5;216m"
+#define ANSI_LAVENDER "\x1b[38;5;183m"
+#define ANSI_YELLOW "\x1b[38;5;226m"
+
 
 struct Command {
 	const char *name;
@@ -26,6 +36,8 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "show", "print beautiful ASCII sky", mon_show },
+	{ "backtrace", "Display information of function call frames", mon_backtrace },
 };
 
 /***** Implementations of basic kernel monitor commands *****/
@@ -56,14 +68,66 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
-int
-mon_backtrace(int argc, char **argv, struct Trapframe *tf)
-{
+
+
 	// LAB 1: Your code here.
     // HINT 1: use read_ebp().
     // HINT 2: print the current ebp on the first line (not current_ebp[0])
-	return 0;
+int
+mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
+    uint32_t *ebp = (uint32_t *)read_ebp();
+cprintf("Stack backtrace:\n");
+    while (ebp != NULL) {
+    uint32_t eip = ebp[1];
+    cprintf("  ebp %08x  eip %08x  args", ebp, eip);
+    int arg = 0;
+int arg_position = 2; 
+    while (arg < 5) {
+            
+			
+			
+			
+			
+			cprintf(" %08x", ebp[arg_position + arg]);
+            arg++;
+        }
+        cprintf("\n");
+
+struct Eipdebuginfo info;
+        int debuginfo = debuginfo_eip(eip, &info);
+        if (!debuginfo) {
+            cprintf("%s:%d: ", info.eip_file, info.eip_line);
+            
+			cprintf("%.*s+%d", info.eip_fn_namelen, info.eip_fn_name, eip - info.eip_fn_addr);
+            cprintf("\n");
+        }
+
+        // Update ebp 
+        ebp = (uint32_t *)*ebp;
+    }
+
+    return 0;
 }
+
+
+
+
+int mon_show(int argc, char **argv, struct Trapframe *tf) {
+
+
+    cprintf(ANSI_LIGHT_BLUE "       ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~    \n" );
+    cprintf(ANSI_LAVENDER "     ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~   \n");
+    cprintf(ANSI_PEACH "   _\\|/_   _\\|/_   _\\|/_   _\\|/_     \n" );
+    cprintf(ANSI_ORANGE "    /|\\     /|\\     /|\\     /|\\      \n" );
+    cprintf(ANSI_LIGHT_GREEN "     ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~   \n" );
+    cprintf(ANSI_PINK "       ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~    \n" );
+	    cprintf(ANSI_YELLOW "   ~ ~ ~ ~ Its a Happy Day ~ ~ ~ ~   \n" ANSI_RESET);
+
+
+    return 0;
+}
+
+
 
 
 
